@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"log/slog"
 	"net/http"
+
+	"anki"
 
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
@@ -38,4 +41,13 @@ func (s *Server) Start() error {
 
 func (s *Server) handlePing(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("ok"))
+}
+
+func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
+	var user anki.User
+	err := json.NewDecoder(r.Body).Decode(&user)
+
+	if err != nil {
+
+	}
 }
