@@ -62,4 +62,13 @@ jobs:
             sudo docker stop anki || true
             sudo docker rm anki || true
             sudo docker run -d --name anki -p 8080:8080 cringecode/anki:latest
+            sleep 10
+            CONTAINER_STATUS=$(sudo docker inspect -f '{{.State.Status}}' anki)
+            if [ "$CONTAINER_STATUS" == "exited" ]; then
+              echo "Container exited. Logs:"
+              sudo docker logs anki
+              exit 1
+            else
+              echo "Container is running successfully."
+            fi
           EOF
