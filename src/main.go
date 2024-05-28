@@ -48,7 +48,4 @@ func main() {
 	if err != nil {
 		logger.Error("server has been stopped", "error", err)
 	}
-
-	logger.Info("server has been started")
-
 }
