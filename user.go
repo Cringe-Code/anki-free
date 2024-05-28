@@ -1,5 +1,5 @@
 package anki
 
 type User struct {
-	login string `json:"login"`
+	Login string `json:"login"`
 }
