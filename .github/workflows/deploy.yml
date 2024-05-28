@@ -52,17 +52,15 @@ jobs:
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to server
-        env:
-          DOCKER_USER: ${{ secrets.DOCKER_USER }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            sudo docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+            sudo docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
             sudo docker pull cringecode/anki:latest
             sudo docker stop anki || true
             sudo docker rm anki || true
             sudo docker run -d --name anki -p 8080:8080 cringecode/anki:latest
-            sleep 10
+            echo "Waiting for container to start..."
+            sleep 5
             CONTAINER_STATUS=$(sudo docker inspect -f '{{.State.Status}}' anki)
             if [ "$CONTAINER_STATUS" == "exited" ]; then
               echo "Container exited. Logs:"
