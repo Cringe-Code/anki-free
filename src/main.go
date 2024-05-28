@@ -7,6 +7,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	db, err := sqlx.Connect("pqx", pgURL)
+	db, err := sqlx.Connect("postgres", pgURL)
 
 	if err != nil {
 		log.Fatalln(err)
