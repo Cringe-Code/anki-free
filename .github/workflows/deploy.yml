@@ -24,9 +24,8 @@ jobs:
 
       - name: Log in to Docker Hub
         env:
-          DOCKER_USER: ${{ secrets.DOCKER_USER }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER --password-stdin
+        run: echo $DOCKER_PASSWORD | docker login -u cringecode --password-stdin
 
       - name: Tag the Docker image
         run: docker tag myapp:latest cringecode/anki:latest
