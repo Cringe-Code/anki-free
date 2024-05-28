@@ -37,5 +37,5 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) handlePing(w http.ResponseWriter, r *http.Request) {
-	_, _ = w.Write([]byte("ok"))
+	w.Write([]byte("ok"))
 }
