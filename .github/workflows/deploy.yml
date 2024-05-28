@@ -57,9 +57,9 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-            docker pull mydockerhubuser/myapp:latest
-            docker stop myapp || true
-            docker rm myapp || true
-            docker run -d --name myapp -p 8080:8080 mydockerhubuser/myapp:latest
+            sudo docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+            sudo docker pull mydockerhubuser/myapp:latest
+            sudo docker stop myapp || true
+            sudo docker rm myapp || true
+            sudo docker run -d --name myapp -p 8080:8080 mydockerhubuser/myapp:latest
           EOF
