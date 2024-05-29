@@ -11,23 +11,19 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func loadDotEnv(name string) string {
-	value := os.Getenv(name)
-	if value != "" {
-		return value
-	}
+func getEnvValue(key string) string {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("error while open .env file")
 	}
-	value = os.Getenv(name)
-	return value
+	return os.Getenv(key)
 }
+
 func main() {
 
 	logger := slog.Default()
 
-	pgURL := loadDotEnv("POSTGRES_CONN")
+	pgURL := getEnvValue("POSTGRES_CONN")
 
 	if pgURL == "" {
 		logger.Error("missed POSTGRES_CONN env")
@@ -40,14 +36,14 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	serverAddress := loadDotEnv("SERVER_ADDRESS")
+	serverAddress := getEnvValue("SERVER_ADDRESS")
 
 	if serverAddress == "" {
 		logger.Error("missed SERVER_ADDRESS")
 		os.Exit(1)
 	}
 
-	signingKey := loadDotEnv("SIGNING_KEY")
+	signingKey := getEnvValue("SIGNING_KEY")
 
 	if signingKey == "" {
 		logger.Error("missed SIGNING_KEY")
