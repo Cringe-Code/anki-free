@@ -11,7 +11,7 @@ COPY . .
 RUN go mod download
 
 # Build the Go application
-RUN go build -o anki
+RUN go build -o anki ./src && chmod +x ./anki
 
 # Expose the application on port 8080
 EXPOSE 8080
