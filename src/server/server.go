@@ -2,7 +2,6 @@ package server
 
 import (
 	"anki"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -37,12 +36,6 @@ func (s *Server) generateToken(login string) (string, error) {
 		Login: login,
 	})
 	ResToken, err := token.SignedString([]byte(s.signingKey))
-	query := "insert into tokens (token, login) values($1, $2)"
-	_, err1 := s.db.Exec(query, ResToken, login)
-	if err1 != nil {
-		fmt.Println("error while insert into db")
-		return "", err1
-	}
 	return ResToken, err
 }
 
@@ -51,6 +44,7 @@ func (s *Server) Start() error {
 
 	router.HandleFunc("/ping", s.handlePing).Methods("GET")
 	router.HandleFunc("/register", s.handleRegister).Methods("POST")
+	router.HandleFunc("/auth", s.handlerSignIn).Methods("POST")
 	router.HandleFunc("/packs/new", s.handleCreatePack).Methods("POST")
 
 	s.logger.Info("server has been started", "address", s.address)

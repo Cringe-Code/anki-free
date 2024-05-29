@@ -1,6 +1,8 @@
 package anki
 
-import "github.com/dgrijalva/jwt-go"
+import (
+	"github.com/dgrijalva/jwt-go"
+)
 
 type User struct {
 	Name  string `json:"name"`
@@ -25,4 +27,8 @@ type Pack struct {
 type TokenClaims struct {
 	jwt.StandardClaims
 	Login string `json:"login"`
+}
+
+type TokenResponse struct {
+	Token string `json:"token"`
 }

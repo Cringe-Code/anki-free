@@ -2,8 +2,6 @@ package server
 
 import (
 	"anki"
-	"crypto/sha512"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -49,8 +47,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash := sha512.Sum512([]byte(user.Login + user.Password))
-	hashedPassword := hex.EncodeToString(hash[:])
+	hashedPassword := hashPassword(user.Password, user.Login)
 
 	q = "insert into users(name, login, hash_password) values ($1, $2, $3)"
 	_, err = s.db.Exec(q, user.Name, user.Login, hashedPassword)
@@ -87,8 +84,63 @@ func (s *Server) handlerSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user.Login == "" || user.Password == "" {
-
+		s.logger.Error("cant sign in user", "error", "empty sign in fields")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"reason": "empty register fields"}`))
+		return
 	}
+
+	var exists bool
+
+	q := "select exists(select 1 from users where login=$1)"
+	err = s.db.QueryRow(q, user.Login).Scan(&exists)
+
+	if err != nil {
+		s.logger.Error("error while checking exists", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"reason": "error while checking exists"}`))
+		return
+	}
+
+	if !exists {
+		s.logger.Error("cant sign in user", "error", "user with such login or password doesnt exists")
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(`{"reason": "wrong login or password"}`))
+		return
+	}
+
+	var userHashPassword string
+	q = "select hash_password from users where login=$1"
+
+	err = s.db.QueryRow(q, user.Login).Scan(&userHashPassword)
+
+	if err != nil {
+		s.logger.Error("error while get user password", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"reason": "error while get user password"}`))
+		return
+	}
+
+	if userHashPassword != hashPassword(user.Password, user.Login) {
+		s.logger.Error("cant sign in user", "error", "user with such login or password doesnt exists")
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(`{"reason": "wrong login or password"}`))
+		return
+	}
+
+	token, err := s.generateToken(user.Login)
+
+	if err != nil {
+		s.logger.Error("error while generate token", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"reason": "error while generate jwt-token}`))
+		return
+	}
+
+	TokenJson, _ := json.Marshal(token)
+	s.logger.Info("user sign in successfully")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(TokenJson))
 }
 
 func (s *Server) handleCreatePack(w http.ResponseWriter, r *http.Request) {
