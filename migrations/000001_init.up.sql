@@ -1,6 +1,8 @@
 create table if not exists users (
     id serial primary key not null,
-    login text
+    name text,
+    login text,
+    hash_password text
 );
 
 create table if not exists packs (

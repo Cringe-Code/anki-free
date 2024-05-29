@@ -1,6 +1,7 @@
 package main
 
 import (
+	"anki/src/server"
 	"log"
 	"log/slog"
 	"os"
@@ -10,18 +11,23 @@ import (
 	_ "github.com/lib/pq"
 )
 
+func loadDotEnv(name string) string {
+	value := os.Getenv(name)
+	if value != "" {
+		return value
+	}
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("error while open .env file")
+	}
+	value = os.Getenv(name)
+	return value
+}
 func main() {
 
 	logger := slog.Default()
 
-	err := godotenv.Load(".env")
-
-	if err != nil {
-		logger.Error("cant open .env file")
-		os.Exit(1)
-	}
-
-	pgURL := os.Getenv("POSTGRES_CONN")
+	pgURL := loadDotEnv("POSTGRES_CONN")
 
 	if pgURL == "" {
 		logger.Error("missed POSTGRES_CONN env")
@@ -34,14 +40,21 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	serverAddress := os.Getenv("SERVER_ADDRESS")
+	serverAddress := loadDotEnv("SERVER_ADDRESS")
 
 	if serverAddress == "" {
 		logger.Error("missed SERVER_ADDRESS")
 		os.Exit(1)
 	}
 
-	s := NewServer(serverAddress, logger, db)
+	signingKey := loadDotEnv("SIGNING_KEY")
+
+	if signingKey == "" {
+		logger.Error("missed SIGNING_KEY")
+		os.Exit(1)
+	}
+
+	s := server.NewServer(serverAddress, logger, db, signingKey)
 
 	err = s.Start()
 
