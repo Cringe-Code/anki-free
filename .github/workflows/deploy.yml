@@ -55,7 +55,7 @@ jobs:
             sudo docker pull cringecode/anki:latest
             sudo docker stop anki || true
             sudo docker rm anki || true
-            sudo docker run -d --name anki -p 8080:8080 -e POSTGRES_CONN=${{ secrets.POSTGRES_CONN }} -e SERVER_ADDRESS=${{ secrets.SERVER_ADDRESS }} -e SIGNING_KEY=${{ secrets.SIGNING_KEY }} cringecode/anki:latest
+            sudo docker run -d --name anki -p 8080:8080 -e POSTGRES_CONN="${{ secrets.POSTGRES_CONN }}" -e SERVER_ADDRESS="${{ secrets.SERVER_ADDRESS }}" -e SIGNING_KEY="${{ secrets.SIGNING_KEY }}" cringecode/anki:latest
             echo "Waiting for container to start..."
             sleep 5
             CONTAINER_STATUS=$(sudo docker inspect -f '{{.State.Status}}' anki)
