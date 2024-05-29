@@ -5,16 +5,13 @@ FROM golang:1.22
 WORKDIR /app
 
 # Copy the Go modules manifests
-COPY src/go.mod src/go.sum ./
+COPY . .
 
 # Download Go modules
 RUN go mod download
 
-# Copy the source code into the container
-COPY ./src .
-
 # Build the Go application
-RUN go build -o anki
+RUN go build -o anki ./src && chmod +x ./anki
 
 # Expose the application on port 8080
 EXPOSE 8080
