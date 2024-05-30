@@ -146,8 +146,29 @@ func (s *Server) handlerSignIn(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleCreatePack(w http.ResponseWriter, r *http.Request) {
 
 	// (´｡• ω •｡`)
+
+	claims := checkAuth(w, r, s.signingKey)
+
+	if claims == nil {
+		return
+	}
+
 	var user anki.User
-	_ = user
+
+	userLogin, ok := claims["login"].(string)
+
+	if !ok {
+		s.logger.Error("cant create pack", "error", "error while parse jwt-claims")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"reason": "error while parse jwt-claims"}`))
+		return
+	}
+
+	q := "select id, name, login from users where login=$1"
+
+	row := s.db.QueryRow(q, userLogin)
+
+	row.Scan(&user.Id, &user.Name, &user.Login)
 	// тут будет проверка, что пользователь авторизован, но я не крудошлепа, чтобы такое писать
 
 	var pack anki.Pack
@@ -170,7 +191,7 @@ func (s *Server) handleCreatePack(w http.ResponseWriter, r *http.Request) {
 
 	var exists bool
 
-	q := "select exists(selec 1 from packs where name=$1)"
+	q = "select exists(select 1 from packs where name=$1)"
 	err = s.db.QueryRow(q, pack.Name).Scan(&exists)
 
 	if err != nil {
@@ -189,7 +210,7 @@ func (s *Server) handleCreatePack(w http.ResponseWriter, r *http.Request) {
 
 	q = "insert into packs(name, rank) values ($1, $2) returning id"
 	var packId string
-	err = s.db.QueryRow(q, pack.Name, pack.Rank).Scan(packId)
+	err = s.db.QueryRow(q, pack.Name, pack.Rank).Scan(&packId)
 
 	if err != nil {
 		s.logger.Error("error while insert into packs table", "error", err)
@@ -219,4 +240,8 @@ func (s *Server) handleCreatePack(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fmt.Sprintf(`{"pack": %s}`, packJson)))
+}
+
+func (s *Server) handleAddWord(w http.ResponseWriter, r *http.Request) {
+
 }

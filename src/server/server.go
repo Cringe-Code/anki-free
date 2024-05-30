@@ -30,7 +30,7 @@ func NewServer(address string, logger *slog.Logger, db *sqlx.DB, signingKey stri
 func (s *Server) generateToken(login string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &anki.TokenClaims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(12 * time.Hour).Unix(), // токен валиден в течение 12 часов
+			ExpiresAt: time.Now().Add(12 * time.Hour).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
 		Login: login,
