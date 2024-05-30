@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - dev
 
 jobs:
   build:
@@ -21,16 +20,16 @@ jobs:
           go-version: 1.22
 
       - name: Build the Docker image
-        run: docker build -t myapp:latest .
+        run: docker build -t anki:latest .
 
       - name: Log in to Docker Hub
-        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login anki-free.cr.cloud.ru -u ${{ secrets.DOCKER_USER }} --password-stdin
 
       - name: Tag the Docker image
-        run: docker tag myapp:latest cringecode/anki:latest
+        run: docker tag anki:latest anki-free.cr.cloud.ru/anki:latest
 
       - name: Push the Docker image
-        run: docker push cringecode/anki:latest
+        run: docker push anki-free.cr.cloud.ru/anki:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -51,11 +50,11 @@ jobs:
       - name: Deploy to server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            echo ${{ secrets.DOCKER_PASSWORD }} | sudo docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-            sudo docker pull cringecode/anki:latest
+            echo ${{ secrets.DOCKER_PASSWORD }} | docker login anki-free.cr.cloud.ru -u ${{ secrets.DOCKER_USER }} --password-stdin
+            sudo docker pull anki-free.cr.cloud.ru/anki:latest
             sudo docker stop anki || true
             sudo docker rm anki || true
-            sudo docker run -d --name anki -p 8080:8080 -e POSTGRES_CONN="${{ secrets.POSTGRES_CONN }}" -e SERVER_ADDRESS="${{ secrets.SERVER_ADDRESS }}" -e SIGNING_KEY="${{ secrets.SIGNING_KEY }}" cringecode/anki:latest
+            sudo docker run -d --name anki -p 8080:8080 -e POSTGRES_CONN="${{ secrets.POSTGRES_CONN }}" -e SERVER_ADDRESS="${{ secrets.SERVER_ADDRESS }}" -e SIGNING_KEY="${{ secrets.SIGNING_KEY }}" anki-free.cr.cloud.ru/anki:latest
             echo "Waiting for container to start..."
             sleep 5
             CONTAINER_STATUS=$(sudo docker inspect -f '{{.State.Status}}' anki)
