@@ -50,7 +50,7 @@ jobs:
       - name: Deploy to server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            echo ${{ secrets.DOCKER_PASSWORD }} | sudo docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+            echo ${{ secrets.DOCKER_PASSWORD }} | docker login anki-free.cr.cloud.ru -u ${{ secrets.DOCKER_USER }} --password-stdin
             sudo docker pull anki-free.cr.cloud.ru/anki:latest
             sudo docker stop anki || true
             sudo docker rm anki || true
