@@ -23,13 +23,13 @@ jobs:
         run: docker build -t myapp:latest .
 
       - name: Log in to Docker Hub
-        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker anki-free.cr.cloud.ru login -u ${{ secrets.DOCKER_USER }} --password-stdin
 
       - name: Tag the Docker image
-        run: docker tag myapp:latest cringecode/anki:latest
+        run: docker tag myapp:latest anki-free.cr.cloud.ru/anki:latest
 
       - name: Push the Docker image
-        run: docker push cringecode/anki:latest
+        run: docker push anki-free.cr.cloud.ru/anki:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -51,7 +51,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             echo ${{ secrets.DOCKER_PASSWORD }} | sudo docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-            sudo docker pull cringecode/anki:latest
+            sudo docker pull anki-free.cr.cloud.ru/anki:latest
             sudo docker stop anki || true
             sudo docker rm anki || true
             sudo docker run -d --name anki -p 8080:8080 -e POSTGRES_CONN="${{ secrets.POSTGRES_CONN }}" -e SERVER_ADDRESS="${{ secrets.SERVER_ADDRESS }}" -e SIGNING_KEY="${{ secrets.SIGNING_KEY }}" cringecode/anki:latest
