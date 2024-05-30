@@ -32,3 +32,17 @@ type TokenClaims struct {
 type TokenResponse struct {
 	Token string `json:"token"`
 }
+
+type WordReq struct {
+	Id       int64  `json:"id"`
+	Rus      string `json:"rus"`
+	Eng      string `json:"eng"`
+	Lvl      int64  `json:"lvl"`
+	PackName string `json:"packName"`
+}
+
+type WordRes struct {
+	Rus string `json:"rus"`
+	Eng string `json:"eng"`
+	Lvl int64  `json:"lvl"`
+}

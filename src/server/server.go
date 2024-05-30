@@ -46,6 +46,7 @@ func (s *Server) Start() error {
 	router.HandleFunc("/register", s.handleRegister).Methods("POST")
 	router.HandleFunc("/auth", s.handlerSignIn).Methods("POST")
 	router.HandleFunc("/packs/new", s.handleCreatePack).Methods("POST")
+	router.HandleFunc("/packs/{packName}/words/new", s.handleAddWord).Methods("POST")
 
 	s.logger.Info("server has been started", "address", s.address)
 

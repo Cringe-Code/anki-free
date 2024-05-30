@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func (s *Server) handlePing(w http.ResponseWriter, r *http.Request) {
@@ -169,7 +171,6 @@ func (s *Server) handleCreatePack(w http.ResponseWriter, r *http.Request) {
 	row := s.db.QueryRow(q, userLogin)
 
 	row.Scan(&user.Id, &user.Name, &user.Login)
-	// тут будет проверка, что пользователь авторизован, но я не крудошлепа, чтобы такое писать
 
 	var pack anki.Pack
 
@@ -243,5 +244,103 @@ func (s *Server) handleCreatePack(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAddWord(w http.ResponseWriter, r *http.Request) {
+	claims := checkAuth(w, r, s.signingKey)
 
+	if claims == nil {
+		return
+	}
+
+	userLogin, ok := claims["login"].(string)
+
+	if !ok {
+		s.logger.Error("cant add word", "error", "error while parse jwt-claims")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"reason": "error while parse jwt-claims"}`))
+		return
+	}
+
+	var word anki.WordReq
+
+	word.PackName, ok = mux.Vars(r)["packName"]
+
+	if !ok {
+		s.logger.Error("cant add word", "error", "cant parse query params")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"reason": "cant parse query params"}`))
+		return
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&word)
+
+	if err != nil {
+		s.logger.Error("cant add word", "error", "error while parse word json")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"reason": "error while parse word json"}`))
+		return
+	}
+
+	if word.Eng == "" || word.Rus == "" {
+		s.logger.Error("cant add word", "error", "empty word create fields")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"reason": "empty word create fields"}`))
+		return
+	}
+
+	var exists bool
+
+	q := `select exists(select 1 from user_pack as up 
+		join users as u on up.user_id = u.id 
+		join packs as p on up.pack_id = p.id 
+		where u.login=$1 and p.name=$2)`
+
+	s.db.QueryRow(q, userLogin, word.PackName).Scan(&exists)
+
+	if !exists {
+		s.logger.Error("cant add word", "error", "cant found word pack")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`{"reason": "cant found word pack"}`))
+		return
+	}
+
+	q = "insert into words(rus, eng, lvl) values ($1, $2, $3) returning id"
+
+	err = s.db.QueryRow(q, word.Rus, word.Eng, word.Lvl).Scan(&word.Id)
+	if err != nil {
+		s.logger.Error("cant add word", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"reason": "error while isnert into db"}`))
+		return
+	}
+
+	q = "select id from users where login=$1"
+	var userId int64
+	err = s.db.QueryRow(q, userLogin).Scan(&userId)
+
+	if err != nil {
+		s.logger.Error("cant add word", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"reason": "error while select from db"}`))
+		return
+	}
+
+	q = "insert into pack_word (pack_id, word_id) values ($1, $2)"
+
+	_, err = s.db.Exec(q, userId, word.Id)
+	if err != nil {
+		s.logger.Error("cant add word", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"reason": "error while isnert into db"}`))
+		return
+	}
+
+	packJson, _ := json.Marshal(anki.WordRes{
+		Rus: word.Rus,
+		Eng: word.Eng,
+		Lvl: word.Lvl,
+	})
+
+	s.logger.Info("word has been added")
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(fmt.Sprintf(`{"word": %s}`, packJson)))
 }
