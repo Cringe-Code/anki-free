@@ -23,7 +23,7 @@ jobs:
         run: docker build -t anki:latest .
 
       - name: Log in to Docker Hub
-        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker anki-free.cr.cloud.ru login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login anki-free.cr.cloud.ru -u ${{ secrets.DOCKER_USER }} --password-stdin
 
       - name: Tag the Docker image
         run: docker tag anki:latest anki-free.cr.cloud.ru/anki:latest
