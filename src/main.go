@@ -24,7 +24,6 @@ func loadDotEnv(name string) string {
 	return value
 }
 func main() {
-
 	logger := slog.Default()
 
 	pgURL := loadDotEnv("POSTGRES_CONN")
